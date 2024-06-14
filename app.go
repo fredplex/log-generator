@@ -77,10 +77,10 @@ func main() {
 	// the web handling function
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("log: app-n-job got an incoming request\n")
-		fmt.Fprintf(w, "Hello %s %s\n", apiKey, endpoint)
+		fmt.Fprintf(w, "Generatig logs to %s\n", endpoint)
 	})
 
-	log.Printf("Listening on port 8080 %s %s\n", apiKey, endpoint)
+	log.Printf("Listening on port 8080 %s\n",endpoint)
 	// start the web server
 	http.ListenAndServe(":8080", nil)
 }
