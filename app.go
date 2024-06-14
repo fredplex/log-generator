@@ -15,7 +15,7 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("log: app-n-job got an incoming request\n")
-		fmt.Fprintf(w, "Hello from app-n-job! I'm a web app!\n")
+		fmt.Fprintf(w, "Hello from app-n-job! I'm a web app! - soo to be a log generator\n")
 	})
 
 	if jobIndex == "" {
