@@ -77,7 +77,7 @@ func main() {
 	// the web handling function
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("log: app-n-job got an incoming request\n")
-		fmt.Fprintf(w, "Generatig logs to %s\n", endpoint)
+		fmt.Fprintf(w, "Generating logs to %s\n", endpoint)
 	})
 
 	log.Printf("Listening on port 8080 %s\n",endpoint)
