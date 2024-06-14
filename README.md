@@ -34,7 +34,9 @@ For the Code Engine application, we will decorate this domain name with a leadin
 
 We will visit the [Code Engine landing page](https://cloud.ibm.com/codeengine/overview) - we can leap in and click on the "Let's Go" button to start.
 
-This will take us to the [start page](https://cloud.ibm.com/codeengine/create/start) - where will begin by chosing to build an application, and we will make the Code selection that we want to "Build container image from source". The code repo will be this repository [https://github.com/andrewlow/log-generator](https://github.com/andrewlow/log-generator).
+This will take us to the [start page](https://cloud.ibm.com/codeengine/create/start) - the first step we need to take is to "Create project".
+
+Once the project has been created we will begin by chosing to build an application, and we will make the Code selection that we want to "Build container image from source". The code repo will be this repository [https://github.com/andrewlow/log-generator](https://github.com/andrewlow/log-generator).
 
 You will be required to "Specify Build Details" - we can skip through accepting the defaults, but we do need to specify a namespace and image name to make the build valid. It doesn't matter what name you use, but `ce-log-generator` is a good suggestion.
 
