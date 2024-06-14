@@ -1,5 +1,6 @@
 # Use a builder image to compile the go lang code
 FROM icr.io/codeengine/golang:alpine AS builder
+WORKDIR /
 COPY app.go /
 RUN go build -o /log-generator /app.go
 
