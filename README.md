@@ -42,8 +42,10 @@ You will be required to "Specify Build Details" - we can skip through accepting 
 
 Make sure you define the two environment variables `API_KEY` and `ENDPOINT` that we found values for in the section above.
 
-You can now visit the Cloud Logs Web UI to see the flow of data.
+Code Engine will scale your application to zero instances if you do not increase the Autoscaling from a minimum of zero, then the application will get stopped if there is no web traffic - stopping the generation of log data.
 
 You should be able to click on the "Create" button which will build the application and start it running, this should only take a few minutes.
 
 Once the deploy is done, you can use the "Test Application" button to find a link to the "Application URL" which will let you get a response from the web server we just deployed. This application is also generating synthetic log messages using the `API_KEY` and `ENDPOINT` provided.
+
+You can now visit the Cloud Logs Web UI to see the flow of data.
