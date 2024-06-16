@@ -48,7 +48,9 @@ type Text struct {
 	Message     string `json:"msg"`
 	IP          string `json:"ip"`
 	RequestID   string `json:"requestID"`
-	RequestType string `json:"requestType"` // New field for request type
+	RequestType string `json:"requestType"`
+	UserAgent   string `json:"userAgent,omitempty"`
+	UserID      string `json:"userID,omitempty"`
 }
 
 type AppData struct {
@@ -195,11 +197,31 @@ func loadEnvVariables() error {
 
 func createLogEntries() []LogEntry {
 	size := rand.Intn(10) + 1
-	logEntries := make([]LogEntry, size)
+	logEntries := make([]LogEntry, size+1)                        // One extra for the login log line
 	requestID := gofakeit.UUID()                                  // Generate a new UUID for each batch of log entries
 	ip := gofakeit.IPv4Address()                                  // Generate a new random IP address for each batch of log entries
 	appName := applicationNames[rand.Intn(len(applicationNames))] // Choose a random application name for this batch
-	for i := range logEntries {
+
+	// Create a login log line
+	logEntries[0] = LogEntry{
+		Timestamp: time.Now().UnixMilli(),
+		Severity:  rand.Intn(6) + 1,
+		Text: Text{
+			Pod:         podNames[rand.Intn(len(podNames))],
+			Container:   containerNames[rand.Intn(len(containerNames))],
+			Message:     "User logged in",
+			IP:          ip,
+			RequestID:   requestID,
+			RequestType: "Login",
+			UserAgent:   gofakeit.UserAgent(),
+			UserID:      gofakeit.Username(),
+		},
+		ApplicationName: appName,
+		SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
+	}
+
+	// Create the rest of the log entries
+	for i := 1; i <= size; i++ {
 		logEntries[i] = LogEntry{
 			Timestamp: time.Now().UnixMilli(),
 			Severity:  rand.Intn(6) + 1,
@@ -254,17 +276,6 @@ func sendLogs(logEntries []LogEntry, authenticator *core.IamAuthenticator) error
 
 	return nil
 }
-
-/* func getIpAddress() (net.IP, error) {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		return nil, fmt.Errorf("failed to dial UDP: %w", err)
-	}
-	defer conn.Close()
-
-	localAddress := conn.LocalAddr().(*net.UDPAddr)
-	return localAddress.IP, nil
-} */
 
 func printLogAndByteCounts(logEntries []LogEntry) {
 	logCounts := make(map[string]int)
