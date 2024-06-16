@@ -48,7 +48,7 @@ type Text struct {
 	Container   string `json:"container"`
 	Message     string `json:"msg"`
 	IP          string `json:"ip"`
-	RequestID   string `json:"requestID"`
+	SessionID   string `json:"sessionID"`
 	RequestType string `json:"requestType"`
 	UserAgent   string `json:"userAgent,omitempty"`
 	UserID      string `json:"userID,omitempty"`
@@ -248,7 +248,7 @@ func loadEnvVariables() error {
 func createLogEntries() []LogEntry {
 	size := rand.Intn(10) + 1
 	logEntries := make([]LogEntry, size+1)                        // One extra for the login log line
-	requestID := gofakeit.UUID()                                  // Generate a new UUID for each batch of log entries
+	sessionID := gofakeit.UUID()                                  // Generate a new UUID for each batch of log entries
 	ip := gofakeit.IPv4Address()                                  // Generate a new random IP address for each batch of log entries
 	appName := applicationNames[rand.Intn(len(applicationNames))] // Choose a random application name for this batch
 
@@ -261,7 +261,7 @@ func createLogEntries() []LogEntry {
 			Container:   containerNames[rand.Intn(len(containerNames))],
 			Message:     "User logged in",
 			IP:          ip,
-			RequestID:   requestID,
+			SessionID:   sessionID,
 			RequestType: "Login",
 			UserAgent:   gofakeit.UserAgent(),
 			UserID:      gofakeit.Username(),
@@ -280,7 +280,7 @@ func createLogEntries() []LogEntry {
 				Container:   containerNames[rand.Intn(len(containerNames))],
 				Message:     gofakeit.HackerPhrase(),
 				IP:          ip,                    // Use the same random IP address for all log entries in this batch
-				RequestID:   requestID,             // Use the same UUID for all log entries in this batch
+				SessionID:   sessionID,             // Use the same UUID for all log entries in this batch
 				RequestType: gofakeit.VerbAction(), // Generate a random request type for each log entry
 			},
 			ApplicationName: appName, // Use the same application name for all log entries in this batch
