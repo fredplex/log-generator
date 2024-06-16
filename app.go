@@ -85,6 +85,7 @@ func main() {
 	go logGenerator(ctx, ticker, authenticator)
 
 	// using GIN for web handling function
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	r.GET("/", handleRequest)
 
