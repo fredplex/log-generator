@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"math/rand"
 	"net"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/IBM/go-sdk-core/v5/core"
 	"github.com/brianvoe/gofakeit/v6"
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -28,6 +30,9 @@ var (
 	containerNames   = [5]string{"container1", "container2", "container3", "container4", "container5"}
 
 	httpClient = &http.Client{}
+
+	totalLogCounts  = make(map[string]int)
+	totalByteCounts = make(map[string]int)
 )
 
 type LogEntry struct {
@@ -43,6 +48,12 @@ type Text struct {
 	Container string `json:"container"`
 	Message   string `json:"msg"`
 	IP        string `json:"ip"`
+}
+
+type AppData struct {
+	Name       string
+	LogLines   int
+	TotalBytes int
 }
 
 func main() {
@@ -74,15 +85,75 @@ func main() {
 	// launch the log generator as a go routine
 	go logGenerator(ctx, ticker, ip.String(), authenticator)
 
-	// the web handling function
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("log: app-n-job got an incoming request\n")
-		fmt.Fprintf(w, "Generating logs to %s\n", endpoint)
-	})
+	// using GIN for web handling function
+	r := gin.Default()
+	r.GET("/", handleRequest)
 
-	log.Printf("Listening on port 8080 %s\n",endpoint)
-	// start the web server
-	http.ListenAndServe(":8080", nil)
+	log.Printf("Listening on port 8080 %s\n", endpoint)
+	r.Run(":8080") // listen and serve on :8080
+}
+
+func handleRequest(c *gin.Context) {
+	log.Printf("log: app-n-job got an incoming request\n")
+
+	tmpl := template.Must(template.New("summary").Parse(`
+		<html>
+		<head>
+			<style>
+				body {
+					background-color: #f0f0f0;
+					font-family: Arial, sans-serif;
+				}
+				h2 {
+					color: #333;
+				}
+				table {
+					border-collapse: collapse;
+					width: 100%;
+					margin-top: 20px;
+				}
+				th, td {
+					border: 1px solid #999;
+					padding: 10px;
+					text-align: left;
+				}
+				th {
+					background-color: #f2f2f2;
+				}
+				tr:nth-child(even) {
+					background-color: #f2f2f2;
+				}
+			</style>
+		</head>
+		<body>
+		<h2>Generating logs to {{.Endpoint}}</h2>
+		<table>
+			<tr><th>Application</th><th>Log Lines</th><th>Bytes</th></tr>
+			{{range .Data}}
+			<tr><td>{{.Name}}</td><td>{{.LogLines}}</td><td>{{.TotalBytes}}</td></tr>
+			{{end}}
+		</table>
+		</body>
+		</html>
+	`))
+
+	data := make([]AppData, 0)
+	for appName, logCount := range totalLogCounts {
+		byteCount := totalByteCounts[appName]
+		data = append(data, AppData{Name: appName, LogLines: logCount, TotalBytes: byteCount})
+	}
+
+	c.Header("Content-Type", "text/html")
+	if err := tmpl.Execute(c.Writer, struct {
+		Endpoint string
+		Data     []AppData
+	}{
+		Endpoint: endpoint,
+		Data:     data,
+	}); err != nil {
+		c.String(http.StatusInternalServerError, "Failed to write response")
+		return
+	}
 }
 
 func handleShutdown(cancelFunc context.CancelFunc) {
@@ -101,8 +172,12 @@ func logGenerator(ctx context.Context, ticker *time.Ticker, ip string, authentic
 			log.Println("Context cancelled, stopping log generation")
 			return
 		case <-ticker.C:
-			if err := sendLogs(createLogEntries(ip), authenticator); err != nil {
+			logEntries := createLogEntries(ip)
+			if err := sendLogs(logEntries, authenticator); err != nil {
 				log.Printf("Failed to send logs: %v", err)
+			} else {
+				printLogAndByteCounts(logEntries)
+				updateTotalCounts(logEntries)
 			}
 		}
 	}
@@ -171,6 +246,11 @@ func sendLogs(logEntries []LogEntry, authenticator *core.IamAuthenticator) error
 		return fmt.Errorf("received non-OK response: %s", res.Status)
 	}
 
+	// Print log entries to stdout
+	for _, entry := range logEntries {
+		log.Printf("Sent log entry: %+v\n", entry)
+	}
+
 	return nil
 }
 
@@ -185,3 +265,26 @@ func getIpAddress() (net.IP, error) {
 	return localAddress.IP, nil
 }
 
+func printLogAndByteCounts(logEntries []LogEntry) {
+	logCounts := make(map[string]int)
+	byteCounts := make(map[string]int)
+	for _, entry := range logEntries {
+		logCounts[entry.ApplicationName]++
+		b, _ := json.Marshal(entry)
+		byteCounts[entry.ApplicationName] += len(b)
+	}
+	for appName, logCount := range logCounts {
+		byteCount := byteCounts[appName]
+		totalLogCount := totalLogCounts[appName]
+		totalByteCount := totalByteCounts[appName]
+		log.Printf("For application %s, sent %d log lines and %d bytes in this batch. Total sent: %d log lines and %d bytes.\n", appName, logCount, byteCount, totalLogCount, totalByteCount)
+	}
+}
+
+func updateTotalCounts(logEntries []LogEntry) {
+	for _, entry := range logEntries {
+		totalLogCounts[entry.ApplicationName]++
+		b, _ := json.Marshal(entry)
+		totalByteCounts[entry.ApplicationName] += len(b)
+	}
+}
