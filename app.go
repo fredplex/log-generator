@@ -85,11 +85,12 @@ func main() {
 	go logGenerator(ctx, ticker, authenticator)
 
 	// using GIN for web handling function
-	gin.SetMode(gin.ReleaseMode)
+	//gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.TestMode)
 	r := gin.Default()
 	r.GET("/", handleRequest)
 
-	log.Printf("Listening on port 8080 %s\n", endpoint)
+	log.Printf("Listening on port 8080 sending loglines to:  %s\n", endpoint)
 	r.Run(":8080") // listen and serve on :8080
 }
 
