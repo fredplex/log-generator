@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"log"
 	"math/rand"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -44,10 +43,12 @@ type LogEntry struct {
 }
 
 type Text struct {
-	Pod       string `json:"process"`
-	Container string `json:"container"`
-	Message   string `json:"msg"`
-	IP        string `json:"ip"`
+	Pod         string `json:"process"`
+	Container   string `json:"container"`
+	Message     string `json:"msg"`
+	IP          string `json:"ip"`
+	RequestID   string `json:"requestID"`
+	RequestType string `json:"requestType"` // New field for request type
 }
 
 type AppData struct {
@@ -59,11 +60,6 @@ type AppData struct {
 func main() {
 	if err := loadEnvVariables(); err != nil {
 		log.Fatal(err)
-	}
-
-	ip, err := getIpAddress()
-	if err != nil {
-		log.Fatalf("Failed to get IP address: %v", err)
 	}
 
 	authenticator := &core.IamAuthenticator{
@@ -83,7 +79,7 @@ func main() {
 	defer ticker.Stop()
 
 	// launch the log generator as a go routine
-	go logGenerator(ctx, ticker, ip.String(), authenticator)
+	go logGenerator(ctx, ticker, authenticator)
 
 	// using GIN for web handling function
 	r := gin.Default()
@@ -165,14 +161,14 @@ func handleShutdown(cancelFunc context.CancelFunc) {
 	cancelFunc()
 }
 
-func logGenerator(ctx context.Context, ticker *time.Ticker, ip string, authenticator *core.IamAuthenticator) {
+func logGenerator(ctx context.Context, ticker *time.Ticker, authenticator *core.IamAuthenticator) {
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println("Context cancelled, stopping log generation")
 			return
 		case <-ticker.C:
-			logEntries := createLogEntries(ip)
+			logEntries := createLogEntries()
 			if err := sendLogs(logEntries, authenticator); err != nil {
 				log.Printf("Failed to send logs: %v", err)
 			} else {
@@ -197,20 +193,25 @@ func loadEnvVariables() error {
 	return nil
 }
 
-func createLogEntries(ip string) []LogEntry {
+func createLogEntries() []LogEntry {
 	size := rand.Intn(10) + 1
 	logEntries := make([]LogEntry, size)
+	requestID := gofakeit.UUID()                                  // Generate a new UUID for each batch of log entries
+	ip := gofakeit.IPv4Address()                                  // Generate a new random IP address for each batch of log entries
+	appName := applicationNames[rand.Intn(len(applicationNames))] // Choose a random application name for this batch
 	for i := range logEntries {
 		logEntries[i] = LogEntry{
 			Timestamp: time.Now().UnixMilli(),
 			Severity:  rand.Intn(6) + 1,
 			Text: Text{
-				Pod:       podNames[rand.Intn(len(podNames))],
-				Container: containerNames[rand.Intn(len(containerNames))],
-				Message:   gofakeit.HackerPhrase(),
-				IP:        ip,
+				Pod:         podNames[rand.Intn(len(podNames))],
+				Container:   containerNames[rand.Intn(len(containerNames))],
+				Message:     gofakeit.HackerPhrase(),
+				IP:          ip,                    // Use the same random IP address for all log entries in this batch
+				RequestID:   requestID,             // Use the same UUID for all log entries in this batch
+				RequestType: gofakeit.VerbAction(), // Generate a random request type for each log entry
 			},
-			ApplicationName: applicationNames[rand.Intn(len(applicationNames))],
+			ApplicationName: appName, // Use the same application name for all log entries in this batch
 			SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 		}
 	}
@@ -254,7 +255,7 @@ func sendLogs(logEntries []LogEntry, authenticator *core.IamAuthenticator) error
 	return nil
 }
 
-func getIpAddress() (net.IP, error) {
+/* func getIpAddress() (net.IP, error) {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
 		return nil, fmt.Errorf("failed to dial UDP: %w", err)
@@ -263,7 +264,7 @@ func getIpAddress() (net.IP, error) {
 
 	localAddress := conn.LocalAddr().(*net.UDPAddr)
 	return localAddress.IP, nil
-}
+} */
 
 func printLogAndByteCounts(logEntries []LogEntry) {
 	logCounts := make(map[string]int)
