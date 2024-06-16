@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sort"
 	"syscall"
 	"time"
 
@@ -92,64 +93,112 @@ func main() {
 }
 
 func handleRequest(c *gin.Context) {
-	log.Printf("log: app-n-job got an incoming request\n")
+	log.Println("Received an incoming request")
 
 	tmpl := template.Must(template.New("summary").Parse(`
+		<!DOCTYPE html>
 		<html>
 		<head>
 			<style>
 				body {
-					background-color: #f0f0f0;
-					font-family: Arial, sans-serif;
-				}
-				h2 {
-					color: #333;
+					background-color: #2c3e50;
+					font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+					color: #ecf0f1;
+					text-align: center;
+					margin: 0;
+					padding: 0;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					height: 100vh;
 				}
 				table {
 					border-collapse: collapse;
-					width: 100%;
-					margin-top: 20px;
+					width: 80%;
+					margin: 20px auto;
+					box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+				}
+				caption {
+					caption-side: top;
+					font-size: 1.5em;
+					font-weight: bold;
+					color: #3498db;
+					margin-bottom: 10px;
 				}
 				th, td {
-					border: 1px solid #999;
-					padding: 10px;
-					text-align: left;
+					border: 1px solid #7f8c8d;
+					padding: 10px 15px;
+					text-align: center;
 				}
 				th {
-					background-color: #f2f2f2;
+					background-color: #34495e;
 				}
 				tr:nth-child(even) {
-					background-color: #f2f2f2;
+					background-color: #3e556d;
+				}
+				tr:hover {
+					background-color: #1abc9c;
+					color: #2c3e50;
+				}
+				.total-row {
+					font-weight: bold;
+					background-color: #2e4053;
 				}
 			</style>
 		</head>
 		<body>
-		<h2>Generating logs to {{.Endpoint}}</h2>
-		<table>
-			<tr><th>Application</th><th>Log Lines</th><th>Bytes</th></tr>
-			{{range .Data}}
-			<tr><td>{{.Name}}</td><td>{{.LogLines}}</td><td>{{.TotalBytes}}</td></tr>
-			{{end}}
-		</table>
+			<table>
+				<caption>Generating logs to {{.Endpoint}}</caption>
+				<tr>
+					<th>Application</th>
+					<th>Log Lines</th>
+					<th>Bytes</th>
+				</tr>
+				{{range .Data}}
+				<tr>
+					<td>{{.Name}}</td>
+					<td>{{.LogLines}}</td>
+					<td>{{.TotalBytes}}</td>
+				</tr>
+				{{end}}
+				<tr class="total-row">
+					<td>Totals</td>
+					<td>{{.TotalLogLines}}</td>
+					<td>{{.TotalBytes}}</td>
+				</tr>
+			</table>
 		</body>
 		</html>
 	`))
 
-	data := make([]AppData, 0)
+	data := []AppData{}
+	var totalLogLines, totalBytes int
+
 	for appName, logCount := range totalLogCounts {
 		byteCount := totalByteCounts[appName]
 		data = append(data, AppData{Name: appName, LogLines: logCount, TotalBytes: byteCount})
+		totalLogLines += logCount
+		totalBytes += byteCount
 	}
+
+	// Sort the data slice to ensure the applications are always displayed in the same order
+	sort.Slice(data, func(i, j int) bool {
+		return data[i].Name < data[j].Name
+	})
 
 	c.Header("Content-Type", "text/html")
 	if err := tmpl.Execute(c.Writer, struct {
-		Endpoint string
-		Data     []AppData
+		Endpoint      string
+		Data          []AppData
+		TotalLogLines int
+		TotalBytes    int
 	}{
-		Endpoint: endpoint,
-		Data:     data,
+		Endpoint:      endpoint,
+		Data:          data,
+		TotalLogLines: totalLogLines,
+		TotalBytes:    totalBytes,
 	}); err != nil {
-		c.String(http.StatusInternalServerError, "Failed to write response")
+		c.String(http.StatusInternalServerError, "Failed to write response: %v", err)
 		return
 	}
 }
