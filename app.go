@@ -19,20 +19,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Application-level constants
-const (
-	port = ":8080"
-)
-
-// Global variables
 var (
 	apiKey   string
 	endpoint string
 
-	applicationNames = []string{"application1", "application2", "application3", "application4", "application5"}
-	subsystemNames   = []string{"subsystem1", "subsystem2", "subsystem3", "subsystem4", "subsystem5"}
-	podNames         = []string{"pod1", "pod2", "pod3", "pod4", "pod5"}
-	containerNames   = []string{"container1", "container2", "container3", "container4", "container5"}
+	applicationNames = [5]string{"application1", "application2", "application3", "application4", "application5"}
+	subsystemNames   = [5]string{"subsystem1", "subsystem2", "subsystem3", "subsystem4", "subsystem5"}
+	podNames         = [5]string{"pod1", "pod2", "pod3", "pod4", "pod5"}
+	containerNames   = [5]string{"container1", "container2", "container3", "container4", "container5"}
 
 	httpClient = &http.Client{}
 
@@ -40,7 +34,6 @@ var (
 	totalByteCounts = make(map[string]int)
 )
 
-// LogEntry represents a log entry structure
 type LogEntry struct {
 	Timestamp       int64  `json:"timestamp"`
 	Severity        int    `json:"severity"`
@@ -49,7 +42,6 @@ type LogEntry struct {
 	SubsystemName   string `json:"subsystemName"`
 }
 
-// Text represents the text structure in a log entry
 type Text struct {
 	Pod         string `json:"process"`
 	Container   string `json:"container"`
@@ -61,20 +53,21 @@ type Text struct {
 	UserID      string `json:"userID,omitempty"`
 }
 
-// AppData represents data for an application
 type AppData struct {
 	Name       string
 	LogLines   int
 	TotalBytes int
 }
 
-// main function starts the application
 func main() {
 	if err := loadEnvVariables(); err != nil {
-		log.Fatalf("Error loading environment variables: %v", err)
+		log.Fatal(err)
 	}
 
-	authenticator := &core.IamAuthenticator{ApiKey: apiKey}
+	authenticator := &core.IamAuthenticator{
+		ApiKey: apiKey,
+	}
+
 	if err := authenticator.Validate(); err != nil {
 		log.Fatalf("Failed to validate IAM authenticator: %v", err)
 	}
@@ -87,35 +80,19 @@ func main() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
+	// launch the log generator as a go routine
 	go logGenerator(ctx, ticker, authenticator)
 
+	// using GIN for web handling function
 	r := gin.Default()
 	r.GET("/", handleRequest)
 
-	log.Printf("Listening on port %s\n", port)
-	if err := r.Run(port); err != nil {
-		log.Fatalf("Failed to run server: %v", err)
-	}
+	log.Printf("Listening on port 8080 %s\n", endpoint)
+	r.Run(":8080") // listen and serve on :8080
 }
 
-// loadEnvVariables loads necessary environment variables
-func loadEnvVariables() error {
-	apiKey = os.Getenv("API_KEY")
-	if apiKey == "" {
-		return fmt.Errorf("API_KEY environment variable is not set")
-	}
-
-	endpoint = os.Getenv("ENDPOINT")
-	if endpoint == "" {
-		return fmt.Errorf("ENDPOINT environment variable is not set")
-	}
-
-	return nil
-}
-
-// handleRequest handles incoming HTTP requests
 func handleRequest(c *gin.Context) {
-	log.Println("Received an incoming request")
+	log.Printf("log: app-n-job got an incoming request\n")
 
 	tmpl := template.Must(template.New("summary").Parse(`
 		<html>
@@ -158,7 +135,7 @@ func handleRequest(c *gin.Context) {
 		</html>
 	`))
 
-	data := []AppData{}
+	data := make([]AppData, 0)
 	for appName, logCount := range totalLogCounts {
 		byteCount := totalByteCounts[appName]
 		data = append(data, AppData{Name: appName, LogLines: logCount, TotalBytes: byteCount})
@@ -172,12 +149,11 @@ func handleRequest(c *gin.Context) {
 		Endpoint: endpoint,
 		Data:     data,
 	}); err != nil {
-		c.String(http.StatusInternalServerError, "Failed to write response: %v", err)
+		c.String(http.StatusInternalServerError, "Failed to write response")
 		return
 	}
 }
 
-// handleShutdown handles graceful shutdown
 func handleShutdown(cancelFunc context.CancelFunc) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
@@ -187,7 +163,6 @@ func handleShutdown(cancelFunc context.CancelFunc) {
 	cancelFunc()
 }
 
-// logGenerator generates logs periodically
 func logGenerator(ctx context.Context, ticker *time.Ticker, authenticator *core.IamAuthenticator) {
 	for {
 		select {
@@ -206,13 +181,26 @@ func logGenerator(ctx context.Context, ticker *time.Ticker, authenticator *core.
 	}
 }
 
-// createLogEntries creates a batch of log entries
+func loadEnvVariables() error {
+	apiKey = os.Getenv("API_KEY")
+	if apiKey == "" {
+		return fmt.Errorf("API_KEY environment variable is not set")
+	}
+
+	endpoint = os.Getenv("ENDPOINT")
+	if endpoint == "" {
+		return fmt.Errorf("ENDPOINT environment variable is not set")
+	}
+
+	return nil
+}
+
 func createLogEntries() []LogEntry {
 	size := rand.Intn(10) + 1
-	logEntries := make([]LogEntry, size+1)
-	requestID := gofakeit.UUID()
-	ip := gofakeit.IPv4Address()
-	appName := applicationNames[rand.Intn(len(applicationNames))]
+	logEntries := make([]LogEntry, size+1)                        // One extra for the login log line
+	requestID := gofakeit.UUID()                                  // Generate a new UUID for each batch of log entries
+	ip := gofakeit.IPv4Address()                                  // Generate a new random IP address for each batch of log entries
+	appName := applicationNames[rand.Intn(len(applicationNames))] // Choose a random application name for this batch
 
 	// Create a login log line
 	logEntries[0] = LogEntry{
@@ -241,18 +229,17 @@ func createLogEntries() []LogEntry {
 				Pod:         podNames[rand.Intn(len(podNames))],
 				Container:   containerNames[rand.Intn(len(containerNames))],
 				Message:     gofakeit.HackerPhrase(),
-				IP:          ip,
-				RequestID:   requestID,
-				RequestType: gofakeit.VerbAction(),
+				IP:          ip,                    // Use the same random IP address for all log entries in this batch
+				RequestID:   requestID,             // Use the same UUID for all log entries in this batch
+				RequestType: gofakeit.VerbAction(), // Generate a random request type for each log entry
 			},
-			ApplicationName: appName,
+			ApplicationName: appName, // Use the same application name for all log entries in this batch
 			SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 		}
 	}
 	return logEntries
 }
 
-// sendLogs sends log entries to the specified endpoint
 func sendLogs(logEntries []LogEntry, authenticator *core.IamAuthenticator) error {
 	b, err := json.Marshal(logEntries)
 	if err != nil {
@@ -282,11 +269,14 @@ func sendLogs(logEntries []LogEntry, authenticator *core.IamAuthenticator) error
 		return fmt.Errorf("received non-OK response: %s", res.Status)
 	}
 
-	log.Printf("Successfully sent %d log entries", len(logEntries))
+	// Print log entries to stdout
+	for _, entry := range logEntries {
+		log.Printf("Sent log entry: %+v\n", entry)
+	}
+
 	return nil
 }
 
-// printLogAndByteCounts prints log and byte counts for each application
 func printLogAndByteCounts(logEntries []LogEntry) {
 	logCounts := make(map[string]int)
 	byteCounts := make(map[string]int)
@@ -303,7 +293,6 @@ func printLogAndByteCounts(logEntries []LogEntry) {
 	}
 }
 
-// updateTotalCounts updates the total log and byte counts for each application
 func updateTotalCounts(logEntries []LogEntry) {
 	for _, entry := range logEntries {
 		totalLogCounts[entry.ApplicationName]++
