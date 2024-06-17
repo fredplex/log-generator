@@ -249,11 +249,11 @@ func loadEnvVariables() error {
 func createLogEntries() []LogEntry {
 	size := rand.Intn(10) + 1
 	logEntries := make([]LogEntry, size+1) // One extra for the login log line
-	requestID := gofakeit.UUID()           // Generate a new UUID for each batch of log entries
+	sessionID := gofakeit.UUID()           // Generate a new UUID for each batch of log entries
 	ip := gofakeit.IPv4Address()           // Generate a new random IP address for each batch of log entries
 	appName := applicationNames[rand.Intn(len(applicationNames))]
 
-	// Create a login log line with Severity = 3
+	// Create a login log line
 	logEntries[0] = LogEntry{
 		Timestamp: time.Now().UnixMilli(),
 		Severity:  3,
@@ -262,7 +262,7 @@ func createLogEntries() []LogEntry {
 			Container:   containerNames[rand.Intn(len(containerNames))],
 			Message:     "User logged in",
 			IP:          ip,
-			RequestID:   requestID,
+			SessionID:   sessionID,
 			RequestType: "Login",
 			UserAgent:   gofakeit.UserAgent(),
 			UserID:      gofakeit.Username(),
@@ -271,7 +271,7 @@ func createLogEntries() []LogEntry {
 		SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 	}
 
-	// Random pause between 500ms to 1500ms after the login log entry
+	// Random pause between 500ms to 1500ms before creating additional log entries
 	pauseDuration := time.Duration((rand.Intn(3)+1)*500) * time.Millisecond
 	time.Sleep(pauseDuration)
 
@@ -285,7 +285,7 @@ func createLogEntries() []LogEntry {
 				Container:   containerNames[rand.Intn(len(containerNames))],
 				Message:     gofakeit.HackerPhrase(),
 				IP:          ip,
-				RequestID:   requestID,
+				SessionID:   sessionID,
 				RequestType: gofakeit.VerbAction(),
 			},
 			ApplicationName: appName,
@@ -309,7 +309,7 @@ func createLogEntries() []LogEntry {
 				Container:   containerNames[rand.Intn(len(containerNames))],
 				Message:     gofakeit.HackerPhrase(),
 				IP:          ip,
-				RequestID:   requestID,
+				SessionID:   sessionID,
 				RequestType: gofakeit.VerbAction(),
 			},
 			ApplicationName: appName,
