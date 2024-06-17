@@ -103,9 +103,9 @@ func handleRequest(c *gin.Context) {
 		<head>
 			<style>
 				body {
-					background-color: #2c3e50;
+					background-color: #e0f7fa;
 					font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-					color: #ecf0f1;
+					color: #00796b;
 					text-align: center;
 					margin: 0;
 					padding: 0;
@@ -124,27 +124,29 @@ func handleRequest(c *gin.Context) {
 					caption-side: top;
 					font-size: 1.5em;
 					font-weight: bold;
-					color: #3498db;
+					color: #004d40;
 					margin-bottom: 10px;
 				}
 				th, td {
-					border: 1px solid #7f8c8d;
+					border: 1px solid #004d40;
 					padding: 10px 15px;
 					text-align: center;
 				}
 				th {
-					background-color: #34495e;
+					background-color: #80deea;
+					color: #000000;
 				}
 				tr:nth-child(even) {
-					background-color: #3e556d;
+					background-color: #b2ebf2;
 				}
 				tr:hover {
-					background-color: #1abc9c;
-					color: #2c3e50;
+					background-color: #4db6ac;
+					color: #ffffff;
 				}
 				.total-row {
 					font-weight: bold;
-					background-color: #2e4053;
+					background-color: #80deea;
+					color: #000000;
 				}
 			</style>
 		</head>
@@ -271,8 +273,8 @@ func createLogEntries() []LogEntry {
 		SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 	}
 
-	// Random pause between 500ms to 1500ms before creating additional log entries
-	pauseDuration := time.Duration((rand.Intn(3)+1)*500) * time.Millisecond
+	// Random pause between 400ms to 1200ms before creating additional log entries
+	pauseDuration := time.Duration((rand.Intn(3)+1)*400) * time.Millisecond
 	time.Sleep(pauseDuration)
 
 	// Create the rest of the log entries with Severity = 3
@@ -293,8 +295,8 @@ func createLogEntries() []LogEntry {
 		}
 	}
 
-	// Random pause between 500ms to 1500ms before creating additional log entries
-	pauseDuration = time.Duration((rand.Intn(3)+1)*500) * time.Millisecond
+	// Random pause between 300ms to 900ms before creating additional log entries
+	pauseDuration = time.Duration((rand.Intn(3)+1)*300) * time.Millisecond
 	time.Sleep(pauseDuration)
 
 	// Create a random number of log entries (0 to 3) with random severity (1, 2, 4, 5, or 6)
