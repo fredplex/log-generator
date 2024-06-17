@@ -249,11 +249,11 @@ func loadEnvVariables() error {
 func createLogEntries() []LogEntry {
 	size := rand.Intn(10) + 1
 	logEntries := make([]LogEntry, size+1) // One extra for the login log line
-	sessionID := gofakeit.UUID()           // Generate a new UUID for each batch of log entries
+	requestID := gofakeit.UUID()           // Generate a new UUID for each batch of log entries
 	ip := gofakeit.IPv4Address()           // Generate a new random IP address for each batch of log entries
 	appName := applicationNames[rand.Intn(len(applicationNames))]
 
-	// Create a login log line
+	// Create a login log line with Severity = 3
 	logEntries[0] = LogEntry{
 		Timestamp: time.Now().UnixMilli(),
 		Severity:  3,
@@ -262,7 +262,7 @@ func createLogEntries() []LogEntry {
 			Container:   containerNames[rand.Intn(len(containerNames))],
 			Message:     "User logged in",
 			IP:          ip,
-			SessionID:   sessionID,
+			RequestID:   requestID,
 			RequestType: "Login",
 			UserAgent:   gofakeit.UserAgent(),
 			UserID:      gofakeit.Username(),
@@ -271,8 +271,8 @@ func createLogEntries() []LogEntry {
 		SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 	}
 
-	// Random pause between 1 to 3 seconds
-	pauseDuration := time.Duration(rand.Intn(3)+1) * time.Second
+	// Random pause between 500ms to 1500ms after the login log entry
+	pauseDuration := time.Duration((rand.Intn(3)+1)*500) * time.Millisecond
 	time.Sleep(pauseDuration)
 
 	// Create the rest of the log entries with Severity = 3
@@ -285,7 +285,7 @@ func createLogEntries() []LogEntry {
 				Container:   containerNames[rand.Intn(len(containerNames))],
 				Message:     gofakeit.HackerPhrase(),
 				IP:          ip,
-				SessionID:   sessionID,
+				RequestID:   requestID,
 				RequestType: gofakeit.VerbAction(),
 			},
 			ApplicationName: appName,
@@ -293,8 +293,8 @@ func createLogEntries() []LogEntry {
 		}
 	}
 
-	// Random pause between 1 to 3 seconds
-	pauseDuration = time.Duration(rand.Intn(3)+1) * time.Second
+	// Random pause between 500ms to 1500ms before creating additional log entries
+	pauseDuration = time.Duration((rand.Intn(3)+1)*500) * time.Millisecond
 	time.Sleep(pauseDuration)
 
 	// Create a random number of log entries (0 to 3) with random severity (1, 2, 4, 5, or 6)
@@ -309,7 +309,7 @@ func createLogEntries() []LogEntry {
 				Container:   containerNames[rand.Intn(len(containerNames))],
 				Message:     gofakeit.HackerPhrase(),
 				IP:          ip,
-				SessionID:   sessionID,
+				RequestID:   requestID,
 				RequestType: gofakeit.VerbAction(),
 			},
 			ApplicationName: appName,
