@@ -248,10 +248,10 @@ func loadEnvVariables() error {
 
 func createLogEntries() []LogEntry {
 	size := rand.Intn(10) + 1
-	logEntries := make([]LogEntry, size+1)                        // One extra for the login log line
-	sessionID := gofakeit.UUID()                                  // Generate a new UUID for each batch of log entries
-	ip := gofakeit.IPv4Address()                                  // Generate a new random IP address for each batch of log entries
-	appName := applicationNames[rand.Intn(len(applicationNames))] // Choose a random application name for this batch
+	logEntries := make([]LogEntry, size+1) // One extra for the login log line
+	sessionID := gofakeit.UUID()           // Generate a new UUID for each batch of log entries
+	ip := gofakeit.IPv4Address()           // Generate a new random IP address for each batch of log entries
+	appName := applicationNames[rand.Intn(len(applicationNames))]
 
 	// Create a login log line
 	logEntries[0] = LogEntry{
@@ -271,23 +271,44 @@ func createLogEntries() []LogEntry {
 		SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 	}
 
-	// Create the rest of the log entries
+	// Create the rest of the log entries with Severity = 3
 	for i := 1; i <= size; i++ {
 		logEntries[i] = LogEntry{
 			Timestamp: time.Now().UnixMilli(),
-			Severity:  rand.Intn(6) + 1,
+			Severity:  3,
 			Text: Text{
 				Pod:         podNames[rand.Intn(len(podNames))],
 				Container:   containerNames[rand.Intn(len(containerNames))],
 				Message:     gofakeit.HackerPhrase(),
-				IP:          ip,                    // Use the same random IP address for all log entries in this batch
-				SessionID:   sessionID,             // Use the same UUID for all log entries in this batch
-				RequestType: gofakeit.VerbAction(), // Generate a random request type for each log entry
+				IP:          ip,
+				SessionID:   sessionID,
+				RequestType: gofakeit.VerbAction(),
 			},
-			ApplicationName: appName, // Use the same application name for all log entries in this batch
+			ApplicationName: appName,
 			SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 		}
 	}
+
+	// Create a random number of log entries (0 to 3) with random severity (1, 2, 4, 5, or 6)
+	additionalEntries := rand.Intn(4) // random number between 0 and 3
+	severities := []int{1, 2, 4, 5, 6}
+	for i := 0; i < additionalEntries; i++ {
+		logEntries = append(logEntries, LogEntry{
+			Timestamp: time.Now().UnixMilli(),
+			Severity:  severities[rand.Intn(len(severities))],
+			Text: Text{
+				Pod:         podNames[rand.Intn(len(podNames))],
+				Container:   containerNames[rand.Intn(len(containerNames))],
+				Message:     gofakeit.HackerPhrase(),
+				IP:          ip,
+				SessionID:   sessionID,
+				RequestType: gofakeit.VerbAction(),
+			},
+			ApplicationName: appName,
+			SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
+		})
+	}
+
 	return logEntries
 }
 
