@@ -256,7 +256,7 @@ func createLogEntries() []LogEntry {
 	// Create a login log line
 	logEntries[0] = LogEntry{
 		Timestamp: time.Now().UnixMilli(),
-		Severity:  rand.Intn(6) + 1,
+		Severity:  3,
 		Text: Text{
 			Pod:         podNames[rand.Intn(len(podNames))],
 			Container:   containerNames[rand.Intn(len(containerNames))],
@@ -270,6 +270,10 @@ func createLogEntries() []LogEntry {
 		ApplicationName: appName,
 		SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 	}
+
+	// Random pause between 1 to 3 seconds
+	pauseDuration := time.Duration(rand.Intn(3)+1) * time.Second
+	time.Sleep(pauseDuration)
 
 	// Create the rest of the log entries with Severity = 3
 	for i := 1; i <= size; i++ {
@@ -288,6 +292,10 @@ func createLogEntries() []LogEntry {
 			SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 		}
 	}
+
+	// Random pause between 1 to 3 seconds
+	pauseDuration = time.Duration(rand.Intn(3)+1) * time.Second
+	time.Sleep(pauseDuration)
 
 	// Create a random number of log entries (0 to 3) with random severity (1, 2, 4, 5, or 6)
 	additionalEntries := rand.Intn(4) // random number between 0 and 3
