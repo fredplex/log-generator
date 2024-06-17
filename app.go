@@ -273,8 +273,8 @@ func createLogEntries() []LogEntry {
 		SubsystemName:   subsystemNames[rand.Intn(len(subsystemNames))],
 	}
 
-	// Random pause between 400ms to 1200ms before creating additional log entries
-	pauseDuration := time.Duration((rand.Intn(3)+1)*400) * time.Millisecond
+	// Random pause between 100ms to 300ms before creating additional log entries
+	pauseDuration := time.Duration((rand.Intn(3)+1)*100) * time.Millisecond
 	time.Sleep(pauseDuration)
 
 	// Create the rest of the log entries with Severity = 3
@@ -295,8 +295,8 @@ func createLogEntries() []LogEntry {
 		}
 	}
 
-	// Random pause between 300ms to 900ms before creating additional log entries
-	pauseDuration = time.Duration((rand.Intn(3)+1)*300) * time.Millisecond
+	// Random pause between 200ms to 600ms before creating additional log entries
+	pauseDuration = time.Duration((rand.Intn(3)+1)*200) * time.Millisecond
 	time.Sleep(pauseDuration)
 
 	// Create a random number of log entries (0 to 3) with random severity (1, 2, 4, 5, or 6)
