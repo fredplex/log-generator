@@ -110,6 +110,7 @@ func handleRequest(c *gin.Context) {
 		<!DOCTYPE html>
 		<html>
 		<head>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<style>
 				body {
 					background-color: #e0f7fa;
@@ -126,6 +127,7 @@ func handleRequest(c *gin.Context) {
 				table {
 					border-collapse: collapse;
 					width: 80%;
+					max-width: 100%;
 					margin: 20px auto;
 					box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 				}
@@ -140,6 +142,7 @@ func handleRequest(c *gin.Context) {
 					border: 1px solid #004d40;
 					padding: 10px 15px;
 					text-align: center;
+					word-wrap: break-word;
 				}
 				th {
 					background-color: #80deea;
@@ -156,6 +159,15 @@ func handleRequest(c *gin.Context) {
 					font-weight: bold;
 					background-color: #80deea;
 					color: #000000;
+				}
+				@media (max-width: 600px) {
+					table {
+						width: 100%;
+					}
+					th, td {
+						font-size: 0.9em;
+						padding: 8px;
+					}
 				}
 			</style>
 		</head>
