@@ -90,8 +90,17 @@ func main() {
 	r := gin.Default()
 	r.GET("/", handleRequest)
 
-	log.Printf("Listening on port 8080 sending loglines to:  %s\n", endpoint)
-	r.Run(":8080") // listen and serve on :8080
+	port := getEnv("PORT", "8080")
+	log.Printf("Listening on port %s sending loglines to:  %s\n", port, endpoint)
+	r.Run(":" + port) // listen and serve on the specified port
+}
+
+func getEnv(key, defaultValue string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+	return value
 }
 
 func handleRequest(c *gin.Context) {
@@ -168,7 +177,7 @@ func handleRequest(c *gin.Context) {
 				<tr class="total-row">
 					<td>Totals</td>
 					<td>{{.TotalLogLines}}</td>
-					<td>{{.TotalBytes}}</td>
+					<td>{{printf "%.2f" .TotalBytesMB}} MB</td>
 				</tr>
 			</table>
 		</body>
@@ -195,12 +204,12 @@ func handleRequest(c *gin.Context) {
 		Endpoint      string
 		Data          []AppData
 		TotalLogLines int
-		TotalBytes    int
+		TotalBytesMB  float64
 	}{
 		Endpoint:      endpoint,
 		Data:          data,
 		TotalLogLines: totalLogLines,
-		TotalBytes:    totalBytes,
+		TotalBytesMB:  float64(totalBytes) / (1024 * 1024),
 	}); err != nil {
 		c.String(http.StatusInternalServerError, "Failed to write response: %v", err)
 		return
