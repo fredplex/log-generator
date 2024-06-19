@@ -42,6 +42,12 @@ You will be required to "Specify Build Details" - we can skip through accepting 
 
 Make sure you define the two environment variables `API_KEY` and `ENDPOINT` that we found values for in the section above.
 
+The app listens on port 8080 and serves a web page showing the stats for the logs and bytes sent: 
+
+![alt text](image.png)
+
+Optionally you can change the listener port by setting environment variable `PORT` to your liking
+
 Code Engine will scale your application to zero instances if you do not increase the Autoscaling from a minimum of zero, then the application will get stopped if there is no web traffic - stopping the generation of log data.
 
 You should be able to click on the "Create" button which will build the application and start it running, this should only take a few minutes.
