@@ -173,7 +173,7 @@ func handleRequest(c *gin.Context) {
 		</head>
 		<body>
 			<table>
-				<caption>Generating logs to {{.Endpoint}} (Version {{.Version}})</caption>
+				<caption>Generating logs to {{.Endpoint}} (v{{.Version}})</caption>
 				<tr>
 					<th>Application</th>
 					<th>Log Lines</th>
