@@ -249,7 +249,7 @@ func logGenerator(ctx context.Context, ticker *time.Ticker, authenticator *core.
 				log.Printf("Failed to send logs: %v", err)
 			} else {
 				printLogAndByteCounts(logEntries)
-				updateTotalCounts(logEntries)
+				//updateTotalCounts(logEntries) // This call is redundant now
 			}
 		}
 	}
@@ -390,16 +390,8 @@ func printLogAndByteCounts(logEntries []LogEntry) {
 	}
 	for appName, logCount := range logCounts {
 		byteCount := byteCounts[appName]
-		totalLogCount := totalLogCounts[appName]
-		totalByteCount := totalByteCounts[appName]
-		log.Printf("For application %s, sent %d log lines and %d bytes in this batch. Total sent: %d log lines and %d bytes.\n", appName, logCount, byteCount, totalLogCount, totalByteCount)
-	}
-}
-
-func updateTotalCounts(logEntries []LogEntry) {
-	for _, entry := range logEntries {
-		totalLogCounts[entry.ApplicationName]++
-		b, _ := json.Marshal(entry)
-		totalByteCounts[entry.ApplicationName] += len(b)
+		totalLogCounts[appName] += logCount
+		totalByteCounts[appName] += byteCount
+		log.Printf("For application %s, sent %d log lines and %d bytes in this batch. Total sent: %d log lines and %d bytes.\n", appName, logCount, byteCount, totalLogCounts[appName], totalByteCounts[appName])
 	}
 }
