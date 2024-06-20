@@ -173,7 +173,7 @@ func handleRequest(c *gin.Context) {
 		</head>
 		<body>
 			<table>
-				<caption>Generating logs to {{.Endpoint}}</caption>
+				<caption>Generating logs to {{.Endpoint}} (Version {{.Version}})</caption>
 				<tr>
 					<th>Application</th>
 					<th>Log Lines</th>
@@ -214,11 +214,13 @@ func handleRequest(c *gin.Context) {
 	c.Header("Content-Type", "text/html")
 	if err := tmpl.Execute(c.Writer, struct {
 		Endpoint      string
+		Version       string // Add version field
 		Data          []AppData
 		TotalLogLines int
 		TotalBytesMB  float64
 	}{
 		Endpoint:      endpoint,
+		Version:       "1.2", // Replace with your actual version number
 		Data:          data,
 		TotalLogLines: totalLogLines,
 		TotalBytesMB:  float64(totalBytes) / (1024 * 1024),
