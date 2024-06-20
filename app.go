@@ -220,7 +220,7 @@ func handleRequest(c *gin.Context) {
 		TotalBytesMB  float64
 	}{
 		Endpoint:      endpoint,
-		Version:       "1.2", // Replace with your actual version number
+		Version:       "1.3", // Replace with your actual version number
 		Data:          data,
 		TotalLogLines: totalLogLines,
 		TotalBytesMB:  float64(totalBytes) / (1024 * 1024),
